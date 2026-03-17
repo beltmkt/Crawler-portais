@@ -27,16 +27,51 @@ class ChavesScraper:
         self.session = requests.Session()
         
     def setup_driver(self):
-        """Configura o ChromeDriver"""
-        options = Options()
-        options.add_argument("--start-maximized")
-        options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        options.add_experimental_option('useAutomationExtension', False)
-        options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-        
-        service = Service(ChromeDriverManager().install())
+    """Configura o ChromeDriver usando o executável já instalado no Docker"""
+    print("🔧 Configurando ChromeDriver...")
+    
+    options = Options()
+    options.add_argument("--headless=new")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('useAutomationExtension', False)
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+    
+    # Caminho do Chrome (já instalado no Docker)
+    chrome_binary = "/usr/bin/google-chrome"
+    if os.path.exists(chrome_binary):
+        options.binary_location = chrome_binary
+        print(f"✅ Chrome encontrado em: {chrome_binary}")
+    
+    # Caminho FIXO do ChromeDriver (instalado no Docker)
+    chromedriver_path = "/usr/local/bin/chromedriver"
+    
+    if not os.path.exists(chromedriver_path):
+        # Fallback: procurar em outros locais
+        possible_paths = [
+            "/usr/local/bin/chromedriver",
+            "/usr/bin/chromedriver",
+            "/usr/bin/chromium-driver"
+        ]
+        for path in possible_paths:
+            if os.path.exists(path):
+                chromedriver_path = path
+                break
+    
+    print(f"✅ Usando ChromeDriver em: {chromedriver_path}")
+    service = Service(chromedriver_path)
+    
+    try:
         self.driver = webdriver.Chrome(service=service, options=options)
         self.wait = WebDriverWait(self.driver, 15)
+        print("✅ ChromeDriver configurado com sucesso!")
+    except Exception as e:
+        print(f"❌ Erro ao iniciar ChromeDriver: {e}")
+        raise
         
     def login(self):
         """Faz login no site"""
