@@ -8,16 +8,14 @@ RUN apt-get update && apt-get install -y wget gnupg unzip curl && \
 RUN wget -q -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \
     apt-get update && apt-get install -y /tmp/chrome.deb && \
     rm /tmp/chrome.deb && \
-    rm -rf /var/lib/apt/lists/* && \
-    echo "✅ Chrome instalado: $(google-chrome --version)"
+    rm -rf /var/lib/apt/lists/*
 
-# Instala ChromeDriver (VERSÃO FIXA - compatível com Chrome 146)
-RUN wget -q -O /tmp/chromedriver.zip "https://storage.googleapis.com/chrome-for-testing-public/146.0.7680.80/linux64/chromedriver-linux64.zip" && \
+# Instala ChromeDriver (VERSÃO FIXA - compatível com Chrome atual)
+RUN wget -q -O /tmp/chromedriver.zip "https://storage.googleapis.com/chrome-for-testing-public/$(google-chrome --version | grep -oP '\d+\.\d+\.\d+')/linux64/chromedriver-linux64.zip" && \
     unzip /tmp/chromedriver.zip -d /usr/local/bin/ && \
     mv /usr/local/bin/chromedriver-linux64/chromedriver /usr/local/bin/ && \
     chmod +x /usr/local/bin/chromedriver && \
-    rm -rf /tmp/chromedriver.zip /usr/local/bin/chromedriver-linux64 && \
-    echo "✅ ChromeDriver instalado: $(chromedriver --version)"
+    rm -rf /tmp/chromedriver.zip /usr/local/bin/chromedriver-linux64
 
 WORKDIR /app
 
@@ -31,5 +29,5 @@ COPY . .
 # Expõe a porta
 EXPOSE 10000
 
-# Comando para iniciar a aplicação
-CMD gunicorn crawler_chavesnamao:app --bind 0.0.0.0:$PORT
+# Comando para iniciar a aplicação (CORRIGIDO)
+CMD gunicorn crawler-portais:app --bind 0.0.0.0:$PORT
